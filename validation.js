@@ -4,7 +4,7 @@ function validatedetails(req, res, next) {
         return;
     }  
     
-    if (req.body.gender != 'male' && req.body.gender && 'female' && req.body.gender != 'other') {
+    if (req.body.gender != 'male' && req.body.gender != 'female' && req.body.gender != 'other') {
         res.status(400).send({ message: "Gender is invalid" });
         return;
     }
@@ -55,7 +55,7 @@ function updatecustomerValidate(req,res,next){
 function loginvalidate(req, res, next) {
     console.log("body", req.body);
     if (!req.body.email || !req.body.password) {
-        res.status(400).send({ message: "Username and password is Manditory" });
+        res.status(400).send({ message: "Username and password are Manditory" });
         return;
     }
     return next();
