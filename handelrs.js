@@ -1,11 +1,32 @@
 var mongoose = require("mongoose");
+var jwt = require("jsonwebtoken");
 var sche = require("./customerschema");
 var sch = require("./userDetailsSchema");
 var customerschema = sche.customerschema;
 var schema = sch.userDetails;
 var collection = sch.collection;
+var tokenkey = "secertkey";
 
-var id;
+
+function tokencheck(req,res,next){ 
+    var token = req.headers.token;
+    console.log("token",token);
+    jwt.verify(token,tokenkey,function(err,sucess){
+        if(err){
+            console.log("err",err);
+            res.status(400).send({message:"token is invalid or missing"});
+            return;
+        }
+        if(sucess){
+            console.log(sucess.tokenIdAndExpiry.id);
+            console.log("sucess",sucess);
+            req.id = sucess.tokenIdAndExpiry.id;
+            return next();
+
+        }
+
+    });
+}
 
 function insertUserData(req, res) {
     var insert = new schema({ name: req.body.name, mobile: req.body.mobile, email: req.body.email, gender: req.body.gender, password: req.body.password });
@@ -22,11 +43,13 @@ function insertUserData(req, res) {
 
 }
 
+
+
 function checklogincreditenails(req, res) {
     var email = req.body.email;
     var password = req.body.password;
-    console.log(email);
-    console.log(password);
+    //console.log(email);
+    //console.log(password);
     schema.findOne({ email: email, password: password }, function (err, result) {
 
         if (err) {
@@ -39,20 +62,28 @@ function checklogincreditenails(req, res) {
         }
         else {
             //console.log("result:",result);
-            id = result._id;
-            console.log("id:", id);
-            res.status(200).send({ message: "login sucessfull" });
+            var  id = result._id;
+            //console.log("id:", id);
+            tokenIdAndExpiry = {
+                id:id            
+            }
+            var tokenendocing = jwt.sign({tokenIdAndExpiry},tokenkey,{expiresIn:'180'});
+            //console.log(tokenendocing);
+            //var verify = jwt.verify(token,tokenkey,function(){});
+            //console.log(verify);
+            res.status(200).send({ message: "login sucessfull",token:tokenendocing });
         }
     })
 }
 
 function createcustomer(req, res) {
-    console.log(id);
-    if (!id) {
-        res.status(400).send({ message: "login required to create customers" });
+   
+    if (!req.id) {
+        console.log("createcustomer",req.id);
+        res.status(400).send({ message: "id missing or login required to create customers" });
         return;
     }
-    var insert = new customerschema({ name: req.body.name, mobile: req.body.mobile, email: req.body.email, gender: req.body.gender, password: req.body.password, address: req.body.address, createdby: id })
+    var insert = new customerschema({ name: req.body.name, mobile: req.body.mobile, email: req.body.email, gender: req.body.gender, password: req.body.password, address: req.body.address, createdby: req.id})
     insert.save(function (err, result) {
         if (err) {
             res.status(400).send({ message: "something went wrong" });
@@ -65,12 +96,12 @@ function createcustomer(req, res) {
 }
 
 function getcustomers(req, res) {
-    console.log("idd:", id);
-    if (!id) {
-        res.status(400).send({ message: "login required" });
+    //console.log("idd:", id);
+    if (!req.id) {
+        res.status(400).send({ message: "id missing or login required" });
         return;
     }
-    customerschema.find({ "createdby": id }, { "createdby": 0 }, function (err, result) {
+    customerschema.find({ "createdby": req.id }, { "createdby": 0 }, function (err, result) {
         if (err) {
             console.log("err:", err);
             res.status(400).send({ message: "something went wrong" });
@@ -83,6 +114,10 @@ function getcustomers(req, res) {
 }
 
 function updatecustomer(req, res) {
+    if(req.id){
+        console.log("update",req.id);
+        res.status(400).send({message:"id is missing"});
+    }
     if(!req.body.id){
         res.status(400).send({message:"id not passed or login required"});
         return;
@@ -128,6 +163,9 @@ customerschema.findByIdAndUpdate({"_id":req.body.id},updatecustomerdata,function
 
 
 function deletecustomer(req,res){
+    if(!req.id){
+        res.status(400).send({message:"id is missing"});
+    }
     customerschema.deleteOne({"_id":req.query.id},function(err,result){
         if(err){
             res.status(400).send({message:"something went wrong"});
@@ -140,6 +178,7 @@ function deletecustomer(req,res){
     })
 }
 module.exports = {
+    tokencheck,
     insertUserData,
     checklogincreditenails,
     createcustomer,

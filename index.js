@@ -17,16 +17,16 @@ app.post("/signup",validation.validatedetails,validation.emailvalidate,validatio
 app.post("/login",validation.loginvalidate,handelers.checklogincreditenails);
 
 //create customer
-app.post("/customer",validation.validatedetails,validation.addressvalidation,handelers.createcustomer);
+app.post("/customer",handelers.tokencheck,validation.validatedetails,validation.addressvalidation,handelers.createcustomer);
 
 //get customers
-app.get("/customer",handelers.getcustomers);
+app.get("/customer",handelers.tokencheck,handelers.getcustomers);
 
 //update customer
-app.put("/customer",validation.updatecustomerValidate,handelers.updatecustomer);
+app.put("/customer",handelers.tokencheck,validation.updatecustomerValidate,handelers.updatecustomer);
 
 //delete customers
-app.delete("/customer",handelers.deletecustomer)
+app.delete("/customer",handelers.tokencheck,handelers.deletecustomer)
 
 app.get("/",function(req,res){
     res.status(200).send({message:"This is empty API"});

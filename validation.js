@@ -1,4 +1,6 @@
 function validatedetails(req, res, next) {
+    var id = req.id;
+    console.log("next",id);
     if (!req.body.name || !req.body.mobile || !req.body.email || !req.body.gender || !req.body.password) {
         res.status(400).send({ message: "All are manidtory fileds" });
         return;
