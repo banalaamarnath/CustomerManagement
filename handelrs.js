@@ -18,14 +18,29 @@ function tokencheck(req,res,next){
             return;
         }
         if(sucess){
-            console.log(sucess.tokenIdAndExpiry.id);
+            //console.log(sucess.tokenIdAndExpiry.id);
             console.log("sucess",sucess);
-            req.id = sucess.tokenIdAndExpiry.id;
+            req.id = sucess.tokenId;
             return next();
 
         }
 
     });
+}
+
+function checkuser(req,res,next){
+schema.findById({"_id":req.id},function(err,result){
+    if(err){
+        res.status(400).send({messaage:"id not found"});
+        return;
+    }
+    if(result){
+        console.log("r",result);
+        //res.status(200).send({message:"id found"});
+        return next();
+    }
+})
+
 }
 
 function insertUserData(req, res) {
@@ -64,10 +79,7 @@ function checklogincreditenails(req, res) {
             //console.log("result:",result);
             var  id = result._id;
             //console.log("id:", id);
-            tokenIdAndExpiry = {
-                id:id            
-            }
-            var tokenendocing = jwt.sign({tokenIdAndExpiry},tokenkey,{expiresIn:'180'});
+            var tokenendocing = jwt.sign({tokenId:id},tokenkey,{expiresIn:180});
             //console.log(tokenendocing);
             //var verify = jwt.verify(token,tokenkey,function(){});
             //console.log(verify);
@@ -184,5 +196,6 @@ module.exports = {
     createcustomer,
     getcustomers,
     updatecustomer,
-    deletecustomer
+    deletecustomer,
+    checkuser
 }
